@@ -1,4 +1,4 @@
-# arouteserver
+# ansible-role-arouteserver
 
 A role to install and configure [ARouteServer](https://github.com/pierky/arouteserver).
 
@@ -133,7 +133,7 @@ $ cat site.yml
     routeserver_clients_from_euroix_ixp_id: 1
 
   roles:
-  - arouteserver
+  - ansible-role-arouteserver
 ```
 
 ```
