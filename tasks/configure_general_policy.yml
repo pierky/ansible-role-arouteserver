@@ -1,7 +1,6 @@
 ---
 # input:
 # - rs_hostname: the hostname of the route server for which the general policy will be configured.
-#
 
 - name: "remove {{ rs_hostname }}.general.yml.tmp"
   file:

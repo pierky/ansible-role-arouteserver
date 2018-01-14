@@ -13,15 +13,15 @@
   when: >
     arouteserver_clients_cfg_file is defined
 
-# Option 2: import clients from local Euro-IX file when arouteserver_clients_from_euroix_file is set.
-- name: "import clients from local {{ arouteserver_clients_cfg_file }} Euro-IX file to create clients.yml.tmp"
+# Option 2: import clients from local IX-F Member Export JSON file when arouteserver_clients_from_euroix_file is set.
+- name: "import clients from local {{ arouteserver_clients_cfg_file }} IX-F Member Export JSON file to create clients.yml.tmp"
   block:
     - name: "copy local file to ARouteServer host"
       copy:
         src: "{{ arouteserver_clients_cfg_file }}"
         dst: "{{ arouteserver_var }}/clients-from-euroix.yml.tmp"
       register: local_clients_file
-    - name: "run 'arouteserver clients-from-euroix' to process the Euro-IX file"
+    - name: "run 'arouteserver clients-from-euroix' to process the IX-F Member Export JSON file"
       command: >
         {{ arouteserver_bin }} clients-from-euroix
         -i {{ arouteserver_var }}/clients-from-euroix.yml.tmp
@@ -33,8 +33,8 @@
     arouteserver_clients_from_euroix_file is defined and
     arouteserver_clients_from_euroix_ixp_id is defined
 
-# Option 3: fetch clients from Euro-IX URL when arouteserver_clients_from_euroix_url is set.
-- name: "fetch clients from Euro-IX file at {{ arouteserver_clients_from_euroix_url }} to create clients.yml.tmp"
+# Option 3: fetch clients from IX-F Member Export JSON URL when arouteserver_clients_from_euroix_url is set.
+- name: "fetch clients from IX-F Member Export JSON file at {{ arouteserver_clients_from_euroix_url }} to create clients.yml.tmp"
   command: >
     {{ arouteserver_bin }} clients-from-euroix
     --url {{ arouteserver_clients_from_euroix_url }}
