@@ -5,11 +5,11 @@
   when: hostvars[item[0]][item[1]] is not defined
   with_nested:
   - "{{ groups['arouteserver_managed_routeservers'] }}"
-  - - rs_asn
-    - daemon
-    - daemon_version
-    - router_id
-    - local_networks
+  - - "{{ arouteserver_varname_rs_asn }}"
+    - "{{ arouteserver_varname_daemon }}"
+    - "{{ arouteserver_varname_daemon_version }}"
+    - "{{ arouteserver_varname_router_id }}"
+    - "{{ arouteserver_varname_local_networks }}"
   tags:
   - always
 
