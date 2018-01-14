@@ -1,1 +1,6 @@
+[arouteserver_hosts]
 localhost
+
+[arouteserver_managed_routeservers]
+rs1
+rs2

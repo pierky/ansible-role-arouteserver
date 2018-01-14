@@ -1,12 +1,23 @@
 ---
 - name: "install ARouteServer dependencies"
-  apt:
+  package:
     name: "{{ item }}"
     state: present
   with_items:
-  - python-dev
+  - "{% if ansible_distribution == 'CentOS' %}python-devel{% else %}python-dev{% endif %}"
   - python-pip
   - python-virtualenv
+  - gcc
+
+- name: "upgrade pip and setuptools"
+  pip:
+    virtualenv: "{{ arouteserver_venv_dir }}"
+    name:
+    - pip
+    - setuptools
+    extra_args: "--upgrade"
+  tags:
+  - upgrade
 
 - name: "is this an upgrade request ('upgrade' tag)?"
   command: "true"
@@ -22,8 +33,10 @@
     extra_args: "{% if arouterserver_upgrade_not_present is not defined %}--upgrade{% endif %}"
   register: arouteserver_pypi_install
   changed_when: >
+    arouteserver_pypi_install.stdout is defined and (
     "for arouteserver: finished with status 'done'" in arouteserver_pypi_install.stdout or
     "Successfully installed arouteserver" in arouteserver_pypi_install.stdout
+    )
   when: arouteserver_local_package_file is undefined or not arouteserver_local_package_file
   tags:
   - upgrade

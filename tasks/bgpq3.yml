@@ -1,10 +1,12 @@
 ---
-- name: "install build-essential"
-  apt:
+- name: "install tools to build bgpq3"
+  package:
     name: "{{ item }}"
     state: present
   with_items:
-  - build-essential
+  - git
+  - gcc
+  - make
 
 - name: "bgpq3: clone git repository"
   git:

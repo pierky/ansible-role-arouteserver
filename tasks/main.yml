@@ -1,5 +1,5 @@
 ---
-- name: "check mandatory variables"
+- name: "check variables: mandatory variables"
   fail:
     msg: "Variable '{{ item[1] }}' for host '{{ item[0] }}' is not defined"
   when: hostvars[item[0]][item[1]] is not defined
@@ -13,7 +13,7 @@
   tags:
   - always
 
-- name: "check clients source"
+- name: "check variables: clients source"
   fail:
     msg: >
       At least one variable among arouteserver_clients_cfg_file,
@@ -26,7 +26,7 @@
   tags:
   - always
 
-- name: "check ixp_id is set when arouteserver_clients_from_euroix_* is used"
+- name: "check variables: ixp_id is set when arouteserver_clients_from_euroix_* is used"
   fail:
     msg: "When arouteserver_clients_from_euroix_* is used, arouteserver_clients_from_euroix_ixp_id must be set"
   when: >
@@ -38,7 +38,7 @@
   tags:
   - always
 
-- name: "be sure var dir exist"
+- name: "be sure var dir exists"
   file:
     path: "{{ arouteserver_var }}"
     state: directory
@@ -63,6 +63,7 @@
   - "{{ groups['arouteserver_managed_routeservers'] }}"
   tags:
   - configure_policy
+  changed_when: False
 
 - name: "configure client list (clients.yml file)"
   include_tasks: configure_client_list.yml
@@ -76,3 +77,4 @@
   - "{{ groups['arouteserver_managed_routeservers'] }}"
   tags:
   - build_rs_config
+  changed_when: False

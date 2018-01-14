@@ -12,6 +12,7 @@
     dest: "{{ arouteserver_var }}/clients.yml.tmp"
   when: >
     arouteserver_clients_cfg_file is defined
+  changed_when: False
 
 # Option 2: import clients from local IX-F Member Export JSON file when arouteserver_clients_from_euroix_file is set.
 - name: "import clients from local {{ arouteserver_clients_cfg_file }} IX-F Member Export JSON file to create clients.yml.tmp"
