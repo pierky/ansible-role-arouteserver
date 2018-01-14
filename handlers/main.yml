@@ -1,0 +1,9 @@
+---
+- name: "request reconfiguration of general policies"
+  listen: "arouteserver: reconfigure general policies"
+  include_tasks: configure_general_policy.yml rs_hostname={{ item }}
+  with_items: "{{ groups['arouteserver_managed_routeservers'] }}"
+- name: "request rebuilding of rs configs"
+  listen: "arouteserver: rebuild rs config files"
+  include_tasks: build_rs_config.yml rs_hostname={{ item }}
+  with_items: "{{ groups['arouteserver_managed_routeservers'] }}"

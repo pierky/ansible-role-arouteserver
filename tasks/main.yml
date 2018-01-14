@@ -1,0 +1,78 @@
+---
+- name: "check mandatory variables"
+  fail:
+    msg: "Variable '{{ item[1] }}' for host '{{ item[0] }}' is not defined"
+  when: hostvars[item[0]][item[1]] is not defined
+  with_nested:
+  - "{{ groups['arouteserver_managed_routeservers'] }}"
+  - - rs_asn
+    - daemon
+    - daemon_version
+    - router_id
+    - local_networks
+  tags:
+  - always
+
+- name: "check clients source"
+  fail:
+    msg: >
+      At least one variable among arouteserver_clients_cfg_file,
+      arouteserver_clients_from_euroix_file and arouteserver_clients_from_euroix_url
+      must be set
+  when: >
+    (arouteserver_clients_cfg_file is not defined or not arouteserver_clients_cfg_file) and
+    (arouteserver_clients_from_euroix_file is not defined or not arouteserver_clients_from_euroix_file) and
+    (arouteserver_clients_from_euroix_url is not defined or not arouteserver_clients_from_euroix_url)
+  tags:
+  - always
+
+- name: "check ixp_id is set when arouteserver_clients_from_euroix_* is used"
+  fail:
+    msg: "When arouteserver_clients_from_euroix_* is used, arouteserver_clients_from_euroix_ixp_id must be set"
+  when: >
+    (arouteserver_clients_from_euroix_ixp_id is not defined or not arouteserver_clients_from_euroix_ixp_id) and
+    (
+      (arouteserver_clients_from_euroix_file is defined and arouteserver_clients_from_euroix_file) or
+      (arouteserver_clients_from_euroix_url is defined and arouteserver_clients_from_euroix_url)
+    )
+  tags:
+  - always
+
+- name: "be sure var dir exist"
+  file:
+    path: "{{ arouteserver_var }}"
+    state: directory
+  changed_when: False
+  tags:
+  - always
+
+- name: "check if build_rs_config is present"
+  command: "true"
+  register: build_rs_config_tag_is_not_present
+  changed_when: False
+
+- name: "install bgpq3"
+  import_tasks: bgpq3.yml
+
+- name: "install ARouteServer"
+  import_tasks: installation.yml
+
+- name: "configure general policy (general.yml file)"
+  include_tasks: configure_general_policy.yml rs_hostname={{ item }}
+  with_items:
+  - "{{ groups['arouteserver_managed_routeservers'] }}"
+  tags:
+  - configure_policy
+
+- name: "configure client list (clients.yml file)"
+  include_tasks: configure_client_list.yml
+  tags:
+  - configure_clients
+
+- name: "rebuild rs config on build_rs_config tag"
+  include_tasks: build_rs_config.yml rs_hostname={{ item }}
+  when: build_rs_configs_tag_is_not_present is not defined
+  with_items:
+  - "{{ groups['arouteserver_managed_routeservers'] }}"
+  tags:
+  - build_rs_config

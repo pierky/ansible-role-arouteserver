@@ -1,0 +1,82 @@
+---
+- name: "remove clients.yml.tmp"
+  file:
+    path: "{{ arouteserver_var }}/clients.yml.tmp"
+    state: absent
+  changed_when: False
+
+# Option 1: use local clients.yml file when arouteserver_clients_cfg_file is set.
+- name: "use local {{ arouteserver_clients_cfg_file }} file to create clients.yml.tmp"
+  template:
+    src: "{{ arouteserver_clients_cfg_file }}"
+    dest: "{{ arouteserver_var }}/clients.yml.tmp"
+  when: >
+    arouteserver_clients_cfg_file is defined
+
+# Option 2: import clients from local Euro-IX file when arouteserver_clients_from_euroix_file is set.
+- name: "import clients from local {{ arouteserver_clients_cfg_file }} Euro-IX file to create clients.yml.tmp"
+  block:
+    - name: "copy local file to ARouteServer host"
+      copy:
+        src: "{{ arouteserver_clients_cfg_file }}"
+        dst: "{{ arouteserver_var }}/clients-from-euroix.yml.tmp"
+      register: local_clients_file
+    - name: "run 'arouteserver clients-from-euroix' to process the Euro-IX file"
+      command: >
+        {{ arouteserver_bin }} clients-from-euroix
+        -i {{ arouteserver_var }}/clients-from-euroix.yml.tmp
+        -o {{ arouteserver_var }}/clients.yml.tmp
+        {{ arouteserver_clients_from_euroix_ixp_id }}
+        {% if arouteserver_clients_from_euroix_extra_args is defined %}{{ arouteserver_clients_from_euroix_extra_args }}{% endif %}
+      when: local_clients_file.changed
+  when: >
+    arouteserver_clients_from_euroix_file is defined and
+    arouteserver_clients_from_euroix_ixp_id is defined
+
+# Option 3: fetch clients from Euro-IX URL when arouteserver_clients_from_euroix_url is set.
+- name: "fetch clients from Euro-IX file at {{ arouteserver_clients_from_euroix_url }} to create clients.yml.tmp"
+  command: >
+    {{ arouteserver_bin }} clients-from-euroix
+    --url {{ arouteserver_clients_from_euroix_url }}
+    -o {{ arouteserver_var }}/clients.yml.tmp
+    {{ arouteserver_clients_from_euroix_ixp_id }}
+    {% if arouteserver_clients_from_euroix_extra_args is defined %}{{ arouteserver_clients_from_euroix_extra_args }}{% endif %}
+  when: >
+    arouteserver_clients_from_euroix_url is defined and
+    arouteserver_clients_from_euroix_ixp_id is defined
+  changed_when: False
+
+- name: "verify that client list has been updated"
+  block:
+  - name: "is clients.yml.tmp present?"
+    stat:
+      path: "{{ arouteserver_var }}/clients.yml.tmp"
+    register: clients_yml_tmp_exists
+    changed_when: False
+  - name: "fail if clients.yml.tmp is not present"
+    fail:
+      msg: >
+        Client list not updated.
+        Please check that at least one variable among arouteserver_clients_cfg_file,
+        arouteserver_clients_from_euroix_file and arouteserver_clients_from_euroix_url
+        is set, and that arouteserver_clients_from_euroix_ixp_id is also set when
+        arouteserver_clients_from_euroix_* is used.
+    when: not clients_yml_tmp_exists.stat.exists
+
+# When the clients.yml file is built using the --url argument, the comments
+# within the file contain the timestamp of the retrieval time. This implies
+# that the file always looks different from the previous one, even if the
+# content is the same.
+- name: "remove comments from clients.yml.tmp"
+  replace:
+    path: "{{ arouteserver_var }}/clients.yml.tmp"
+    regexp: '^#.*\s'
+  changed_when: False
+
+- name: "update clients.yml from clients.yml.tmp"
+  copy:
+    src: "{{ arouteserver_var }}/clients.yml.tmp"
+    remote_src: True
+    dest: "{{ arouteserver_dir }}/clients.yml"
+  notify:
+  - "arouteserver: rebuild rs config files"

@@ -1,0 +1,55 @@
+---
+# input:
+# - rs_hostname: the hostname of the route server for which the configuration file will be built.
+
+- name: "remove {{ rs_hostname }}.d"
+  file:
+    path: "{{ arouteserver_var }}/{{ rs_hostname }}.d"
+    state: absent
+  changed_when: False
+
+- name: "create {{ rs_hostname }}.d"
+  file:
+    path: "{{ arouteserver_var }}/{{ rs_hostname }}.d"
+    state: directory
+  changed_when: False
+
+- name: "rebuild config files for {{ rs_hostname }}"
+  command: >
+    {{ arouteserver_bin }}
+    {{ command_opts.daemon }}
+    --target-version {{ hostvars[rs_hostname][arouteserver_varname_daemon_version] }}
+    --clients {{ arouteserver_dir }}/clients.yml
+    --general {{ arouteserver_dir }}/{{ rs_hostname }}.general.yml
+    --output {{ arouteserver_var }}/{{ rs_hostname }}.d/{{ rs_hostname }}-{{ command_opts.daemon }}{{ command_opts.tag }}.cfg
+    {{ command_opts.args }}
+  when: command_opts.daemon == hostvars[rs_hostname][arouteserver_varname_daemon]
+  with_items:
+  - { daemon: "bird", tag: "4", args: "--ip-ver 4" }
+  - { daemon: "bird", tag: "6", args: "--ip-ver 6" }
+  - { daemon: "openbgpd", tag: "",  args: "--ignore-issues path_hiding" }
+  loop_control:
+    loop_var: command_opts
+  changed_when: False
+
+- name: "list files in {{ rs_hostname }}.d/"
+  find:
+    paths: "{{ arouteserver_var }}/{{ rs_hostname }}.d/"
+  register: rs_d_content
+
+- name: "copy {{ rs_hostname }} config files to {{ arouteserver_dir }}"
+  copy:
+    src: "{{ rs_d_file.path }}"
+    dest: "{{ arouteserver_dir }}/"
+    remote_src: True
+  with_items:
+  - "{{ rs_d_content.files }}"
+  loop_control:
+    loop_var: rs_d_file
+  register: rs_config_file
+
+- name: "notify on rs config change"
+  command: "true"
+  notify: "{{ arouteserver_notify_on_rs_change }}"
+  when: arouteserver_notify_on_rs_change is defined and arouteserver_notify_on_rs_change and rs_config_file.changed
+  changed_when: False

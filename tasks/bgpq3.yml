@@ -1,0 +1,35 @@
+---
+- name: "install build-essential"
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - build-essential
+
+- name: "bgpq3: clone git repository"
+  git:
+    repo: https://github.com/snar/bgpq3.git
+    dest: "{{ bgpq3_dir }}"
+  register: bgpq3_git_clone
+
+- name: "bgpq3: configure"
+  command: ./configure
+  args:
+    chdir: "{{ bgpq3_dir }}"
+  when: bgpq3_git_clone.changed
+  changed_when: False
+
+- name: "bgpq3: make"
+  command: make
+  args:
+    chdir: "{{ bgpq3_dir }}"
+  when: bgpq3_git_clone.changed
+  register: bgpq3_make
+  changed_when: >
+    "Nothing to be done" not in bgpq3_make.stdout
+
+- name: "bgpq3: install if compile changed"
+  command: make install
+  args:
+    chdir: "{{ bgpq3_dir }}"
+  when: bgpq3_make.changed
