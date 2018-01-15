@@ -1,9 +1,20 @@
+# Stolen from Ignacio Sanchez Gines work: https://github.com/drhelius/travis-ansible-demo
+
 FROM debian:stretch
 
-ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
-	python-pip
+    software-properties-common \
+    build-essential \
+    libffi-dev \
+    libssl-dev \
+    python-dev \
+    python-pip \
+    git \
+    systemd \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN pip install ansible
+RUN pip install --upgrade setuptools && pip install ansible
 
-CMD ["sleep", "1000000"]
+RUN mkdir -p /etc/ansible && echo "[local]\nlocalhost ansible_connection=local" > /etc/ansible/hosts
+
+ENTRYPOINT ["/bin/systemd"]
