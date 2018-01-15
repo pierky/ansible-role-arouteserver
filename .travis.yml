@@ -22,3 +22,6 @@ before_install:
 
 script:
   - ./tests/run_test
+
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/

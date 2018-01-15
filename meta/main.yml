@@ -6,9 +6,6 @@ galaxy_info:
   min_ansible_version: 2.0
 
   platforms:
-  - name: CentOS
-    versions:
-    - 7
   - name: Debian
     versions:
     - jessie
@@ -19,11 +16,10 @@ galaxy_info:
     - xenial
 
   galaxy_tags:
-  - Route server
-  - Routeserver
-  - Route-server
+  - routeserver
+  - route-server
   - IXP
-  - Internet Exchange
+  - InternetExchange
   - BIRD
   - OpenBGPD
   - BGP
