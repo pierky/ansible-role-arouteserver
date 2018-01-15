@@ -1,0 +1,7 @@
+- hosts: arouteserver_hosts
+  connection: local
+  vars:
+    arouteserver_general_cfg_file: general.yml.j2.example
+    arouteserver_clients_cfg_file: clients.yml
+  roles:
+  - ansible-role-arouteserver

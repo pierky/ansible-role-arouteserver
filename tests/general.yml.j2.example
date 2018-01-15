@@ -1,0 +1,10 @@
+# This is an example of how the general.yml template can be written.
+cfg:
+  rs_as: {{ hostvars[rs_hostname][arouteserver_varname_rs_asn] }}
+  router_id: {{ hostvars[rs_hostname][arouteserver_varname_router_id] }}
+  filtering:
+    global_black_list_pref:
+{% for prefix in hostvars[rs_hostname][arouteserver_varname_local_networks] %}
+    - prefix: "{{ prefix.split("/")[0] }}"
+      length: {{ prefix.split("/")[1] }}
+{% endfor %}

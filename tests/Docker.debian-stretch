@@ -1,0 +1,9 @@
+FROM debian:stretch
+
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+	python-pip
+
+RUN pip install ansible
+
+CMD ["sleep", "1000000"]

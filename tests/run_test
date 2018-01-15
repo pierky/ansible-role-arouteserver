@@ -1,0 +1,113 @@
+#!/bin/bash
+
+set -e
+
+[[ -z "${distribution}" ]] && { echo "distribution not set"; exit 1; }
+[[ -z "${version}" ]] && { echo "version not set"; exit 1; }
+
+root="`pwd`"
+docker_role_dir="/root/ansible-role-arouteserver"
+temp_file=$(mktemp)
+
+cd tests
+
+function title() {
+	echo ""
+	echo "$(tput bold)$1$(tput sgr0)"
+}
+
+function do_stop() {
+	docker stop docker_test &>/dev/null || true
+	docker rm -f docker_test &>/dev/null || true
+}
+
+function do_new() {
+	do_stop
+
+	title "Starting a new Docker container... "
+	docker run \
+		--name docker_test \
+		--detach \
+		--privileged \
+		-v ${root}:${docker_role_dir}:ro \
+		-w /root \
+		${distribution}-${version}:ansible
+}
+
+function test_changed() {
+	cat ${temp_file} | \
+		grep -q "changed=$1.*failed=0" \
+		&& (echo "$2: pass") \
+		|| (echo "$2: fail" && exit 1)
+}
+
+# Syntax check.
+do_new
+title "Testing syntax check..."
+docker exec docker_test \
+	env ANSIBLE_FORCE_COLOR=1 ansible-playbook -v -i ${docker_role_dir}/tests/inventory --syntax-check ${docker_role_dir}/tests/test.yml
+
+# Scenario 1
+cmd="env ANSIBLE_FORCE_COLOR=1 ansible-playbook -v -i ${docker_role_dir}/tests/inventory ${docker_role_dir}/tests/scenario1.yml"
+
+title "Testing scenario 1: local general.yml and clients.yml..."
+
+docker exec docker_test ${cmd}
+
+# rs1 IPv4
+title "Checking rs1 IPv4 config..."
+docker exec docker_test \
+	bash -c 'cat /root/arouteserver/rs1-bird4.cfg | grep -q "router id 192.0.2.1"' \
+	|| (echo 'invalid rs1 IPv4 config file' && exit 1)
+docker exec docker_test \
+	bash -c 'cat /root/arouteserver/rs1-bird4.cfg | grep -q "193.0.0.0/21"' \
+	|| (echo 'IPv4 control prefix not found in rs1 config' && exit 1)
+
+# rs1 IPv6
+title "Checking rs1 IPv6 config..."
+docker exec docker_test \
+	bash -c 'cat /root/arouteserver/rs1-bird6.cfg | grep -q "router id 192.0.2.1"' \
+	|| (echo 'invalid rs1 IPv6 config file' && exit 1)
+docker exec docker_test \
+	bash -c 'cat /root/arouteserver/rs1-bird6.cfg | grep -q "2001:500:4::/48"' \
+	|| (echo 'IPv6 control prefix not found in rs1 config' && exit 1)
+
+# rs2
+title "Checking rs2 IPv4 and IPv6 config..."
+docker exec docker_test \
+	bash -c 'cat /root/arouteserver/rs2-openbgpd.cfg | grep -q "router-id 192.0.2.2"' \
+	|| (echo 'invalid rs2 IPv4 config file' && exit 1)
+docker exec docker_test \
+	bash -c 'cat /root/arouteserver/rs2-openbgpd.cfg | grep -q "193.0.0.0/21"' \
+	|| (echo 'IPv4 control prefix not found in rs2 config' && exit 1)
+docker exec docker_test \
+	bash -c 'cat /root/arouteserver/rs2-openbgpd.cfg | grep -q "2001:500:4::/48"' \
+	|| (echo 'IPv6 control prefix not found in rs2 config' && exit 1)
+
+title "Testing scenario 1 idempotence..."
+docker exec docker_test ${cmd} | tee ${temp_file}
+# No changes expected.
+test_changed 0 "Idempotence test"
+
+title "Testing 'upgrade' tag..."
+docker exec docker_test ${cmd} -t upgrade | tee ${temp_file}
+# No changes expected.
+test_changed 0 "No changes after 'upgrade' test"
+
+title "Testing 'configure_policy' tag..."
+docker exec docker_test ${cmd} -t configure_policy | tee ${temp_file}
+# No changes expected.
+test_changed 0 "No changes after 'configure_policy' test"
+
+title "Testing 'configure_clients' tag..."
+docker exec docker_test ${cmd} -t configure_clients | tee ${temp_file}
+# No changes expected.
+test_changed 0 "No changes after 'configure_clients' test"
+
+title "Testing 'build_rs_config' tag..."
+docker exec docker_test ${cmd} -t build_rs_config | tee ${temp_file}
+# No changes expected.
+test_changed 0 "No changes after 'build_rs_config' test"
+
+title "Stopping and removing Docker container..."
+do_stop

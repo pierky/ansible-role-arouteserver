@@ -1,12 +1,24 @@
 ---
-language: python
-python: "2.7"
+sudo: required
+
+env:
+  - distribution: centos
+    version: 7
+  - distribution: debian
+    version: jessie
+  - distribution: debian
+    version: stretch
+  - distribution: ubuntu
+    version: trusty
+  - distribution: ubuntu
+    version: xenial
+
+services:
+  - docker
 
 before_install:
-  - sudo apt-get update -qq
-
-install:
-  - pip install ansible
+  - docker pull ${distribution}:${version}
+  - docker build -f tests/Dockerfile.${distribution}-${version} -t ${distribution}-${version}:ansible .
 
 script:
-  - "cd tests ; ansible-playbook -i inventory test.yml --syntax-check"
+  - ./tests/run_test
