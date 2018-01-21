@@ -1,8 +1,6 @@
 - hosts: arouteserver_hosts
   connection: local
   vars:
-    arouteserver_general_cfg_file: general.yml.j2.example
-
     # Relative to the host where ansible is running, that is,
     # the Docker container.
     # The file clients.yml is copied into /root/tmp/

@@ -32,6 +32,13 @@ function do_new() {
 		-v ${root}:${docker_role_dir}:ro \
 		-w /root \
 		${distribution}-${version}:ansible
+
+	# Copy the local tests/clients.yml into /root/tmp,
+	# so that it can be found at the path referenced by
+	# arouteserver_clients_cfg_file and it can also be
+	# modified by this script as needed.
+	docker exec docker_test mkdir /root/tmp
+	docker cp clients.yml docker_test:/root/tmp/
 }
 
 function test_changed() {
@@ -41,8 +48,9 @@ function test_changed() {
 		|| (echo "$2: fail" && exit 1)
 }
 
-# Syntax check.
 do_new
+
+# Syntax check.
 title "Testing syntax check..."
 docker exec docker_test \
 	env ANSIBLE_FORCE_COLOR=1 ansible-playbook -v -i ${docker_role_dir}/tests/inventory --syntax-check ${docker_role_dir}/tests/test.yml
@@ -108,6 +116,41 @@ title "Testing 'build_rs_config' tag..."
 docker exec docker_test ${cmd} -t build_rs_config | tee ${temp_file}
 # No changes expected.
 test_changed 0 "No changes after 'build_rs_config' test"
+
+title "Testing clients.yml changes: comment only..."
+docker exec docker_test bash -c 'echo \# >> /root/tmp/clients.yml'
+docker exec docker_test ${cmd} -t configure_clients | tee ${temp_file}
+# No changes expected (comments are stripped out).
+test_changed 0 "No changes expected when clients.yml changes: comment only"
+
+title "Testing clients.yml changes: new peer..."
+docker exec docker_test bash -c 'cat << EOF >> /root/tmp/clients.yml
+  - asn: 64497
+    ip:
+    - "192.0.2.33"
+    - "2001:db:1:1::33"
+EOF'
+docker exec docker_test ${cmd} -t configure_clients | tee ${temp_file}
+# Changes expected: 3 changes, clients.yml file and 2 route servers
+test_changed 3 "Changes expected when clients.yml changes: new peer"
+
+do_new
+
+# Scenario 2
+cmd="env ANSIBLE_FORCE_COLOR=1 ansible-playbook -v -i ${docker_role_dir}/tests/inventory ${docker_role_dir}/tests/scenario2.yml"
+
+title "Testing scenario 2: general.yml via 'configure' command..."
+
+docker exec docker_test ${cmd}
+
+do_new
+
+# Scenario 3
+cmd="env ANSIBLE_FORCE_COLOR=1 ansible-playbook -v -i ${docker_role_dir}/tests/inventory ${docker_role_dir}/tests/scenario3.yml"
+
+title "Testing scenario 2: clients.yml via Euro-IX URL..."
+
+docker exec docker_test ${cmd}
 
 title "Stopping and removing Docker container..."
 do_stop
