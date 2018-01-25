@@ -52,10 +52,10 @@
   changed_when: False
 
 - name: "install bgpq3"
-  import_tasks: bgpq3.yml
+  include_tasks: bgpq3.yml
 
 - name: "install ARouteServer"
-  import_tasks: installation.yml
+  include_tasks: installation.yml
 
 - name: "configure general policy (general.yml file)"
   include_tasks: configure_general_policy.yml rs_hostname={{ item }}
