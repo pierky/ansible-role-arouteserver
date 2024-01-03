@@ -167,8 +167,7 @@ router_id: 192.0.2.2
 ```
 ---
 - hosts: arouteserver_hosts
-  become: yes
-    gather_facts: False
+  gather_facts: False
 
   vars:
     arouteserver_clients_from_euroix_url: "http://ixp-manager.example.com/api/v4/member-export/ixf/0.6?apikey=123456"

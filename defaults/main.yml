@@ -12,11 +12,11 @@
 
 #arouteserver_notify_on_rs_change:
 
-arouteserver_venv_dir: "~/.virtualenvs/arouteserver"
-arouteserver_bin: "{{arouteserver_venv_dir}}/bin/arouteserver"
-arouteserver_dir: "~/arouteserver"
-arouteserver_var: "~/arouteserver_var"
-bgpq3_dir: "~/bgpq3"
+arouteserver_venv_dir: "{{ lookup('env', 'HOME') }}/.virtualenvs/arouteserver"
+arouteserver_bin: "{{ arouteserver_venv_dir }}/bin/arouteserver"
+arouteserver_dir: "{{ lookup('env', 'HOME') }}/arouteserver"
+arouteserver_var: "{{ lookup('env', 'HOME') }}/arouteserver_var"
+bgpq4_dir: "{{ lookup('env', 'HOME') }}/bgpq4"
 
 arouteserver_varname_rs_asn: "rs_asn"
 arouteserver_varname_daemon: "daemon"
