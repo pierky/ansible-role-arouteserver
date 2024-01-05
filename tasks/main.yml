@@ -3,13 +3,13 @@
   fail:
     msg: "Variable '{{ item[1] }}' for host '{{ item[0] }}' is not defined"
   when: hostvars[item[0]][item[1]] is not defined
-  with_nested:
-  - "{{ groups['arouteserver_managed_routeservers'] }}"
-  - - "{{ arouteserver_varname_rs_asn }}"
-    - "{{ arouteserver_varname_daemon }}"
-    - "{{ arouteserver_varname_daemon_version }}"
-    - "{{ arouteserver_varname_router_id }}"
-    - "{{ arouteserver_varname_local_networks }}"
+  loop: "{{ groups['arouteserver_managed_routeservers'] | product([
+    arouteserver_varname_rs_asn,
+    arouteserver_varname_daemon,
+    arouteserver_varname_daemon_version,
+    arouteserver_varname_router_id,
+    arouteserver_varname_local_networks
+    ]) | list }}"
   tags:
   - always
 
@@ -58,12 +58,13 @@
   include_tasks: installation.yml
 
 - name: "configure general policy (general.yml file)"
-  include_tasks: configure_general_policy.yml rs_hostname={{ item }}
+  include_tasks: configure_general_policy.yml
   with_items:
   - "{{ groups['arouteserver_managed_routeservers'] }}"
+  loop_control:
+    loop_var: rs_hostname
   tags:
   - configure_policy
-  changed_when: False
 
 - name: "configure client list (clients.yml file)"
   include_tasks: configure_client_list.yml
@@ -71,10 +72,11 @@
   - configure_clients
 
 - name: "rebuild rs config on build_rs_config tag"
-  include_tasks: build_rs_config.yml rs_hostname={{ item }}
+  include_tasks: build_rs_config.yml
   when: build_rs_configs_tag_is_not_present is not defined
   with_items:
   - "{{ groups['arouteserver_managed_routeservers'] }}"
+  loop_control:
+    loop_var: rs_hostname
   tags:
   - build_rs_config
-  changed_when: False

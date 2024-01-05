@@ -1,12 +1,13 @@
 ---
 - name: "install ARouteServer dependencies"
+  become: True
   package:
     name: "{{ item }}"
     state: present
   with_items:
-  - "{% if ansible_distribution == 'CentOS' %}python-devel{% else %}python-dev{% endif %}"
-  - python-pip
-  - python-virtualenv
+  - "{% if ansible_distribution == 'CentOS' %}python-devel{% else %}{% if ansible_python_version is version('3.0', '>=') %}python3-dev{% else %}python-dev{% endif %}{% endif %}"
+  - "{% if ansible_distribution == 'CentOS' %}python-pip{% else %}{% if ansible_python_version is version('3.0', '>=') %}python3-pip{% else %}python-pip{% endif %}{% endif %}"
+  - "{% if ansible_distribution == 'CentOS' %}python-virtualenv{% else %}{% if ansible_python_version is version('3.0', '>=') %}python3-virtualenv{% else %}python-virutalenv{% endif %}{% endif %}"
   - gcc
 
 - name: "upgrade pip and setuptools"

@@ -1,5 +1,6 @@
 ---
 - name: "install tools to build bgpq3"
+  become: True
   package:
     name: "{{ item }}"
     state: present
@@ -31,6 +32,7 @@
     "Nothing to be done" not in bgpq3_make.stdout
 
 - name: "bgpq3: install if compile changed"
+  become: True
   command: make install
   args:
     chdir: "{{ bgpq3_dir }}"

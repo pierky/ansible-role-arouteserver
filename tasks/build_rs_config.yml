@@ -39,13 +39,11 @@
 
 - name: "copy {{ rs_hostname }} config files to {{ arouteserver_dir }}"
   copy:
-    src: "{{ rs_d_file.path }}"
+    src: "{{ item.path }}"
     dest: "{{ arouteserver_dir }}/"
     remote_src: True
   with_items:
   - "{{ rs_d_content.files }}"
-  loop_control:
-    loop_var: rs_d_file
   register: rs_config_file
 
 - name: "notify on rs config change"
