@@ -1,0 +1,49 @@
+---
+- name: "install tools to build bgpq4"
+  become: True
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - git
+  - gcc
+  - automake
+  - autoconf
+  - libtool
+  - make
+
+- name: "bgpq4: clone git repository"
+  git:
+    repo: https://github.com/bgp/bgpq4.git
+    dest: "{{ bgpq4_dir }}"
+  register: bgpq4_git_clone
+
+- name: "bgpq4: bootstrap"
+  command: ./bootstrap
+  args:
+    chdir: "{{ bgpq4_dir }}"
+  when: bgpq4_git_clone.changed
+  changed_when: False
+
+- name: "bgpq4: configure"
+  command: ./configure
+  args:
+    chdir: "{{ bgpq4_dir }}"
+  when: bgpq4_git_clone.changed
+  changed_when: False
+
+- name: "bgpq4: make"
+  command: make
+  args:
+    chdir: "{{ bgpq4_dir }}"
+  when: bgpq4_git_clone.changed
+  register: bgpq4_make
+  changed_when: >
+    "Nothing to be done for 'all-am'" not in bgpq4_make.stdout
+
+- name: "bgpq4: install if compile changed"
+  become: True
+  command: make install
+  args:
+    chdir: "{{ bgpq4_dir }}"
+  when: bgpq4_make.changed

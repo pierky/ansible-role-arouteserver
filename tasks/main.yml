@@ -51,8 +51,8 @@
   register: build_rs_config_tag_is_not_present
   changed_when: False
 
-- name: "install bgpq3"
-  include_tasks: bgpq3.yml
+- name: "install bgpq4"
+  include_tasks: bgpq4.yml
 
 - name: "install ARouteServer"
   include_tasks: installation.yml

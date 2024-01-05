@@ -6,7 +6,7 @@ A role to install and configure [ARouteServer](https://github.com/pierky/aroutes
 
 This roles...
 
-* installs ARouteServer and bgpq3
+* installs ARouteServer and bgpq4
 
 * copies a local [general policy definition file](https://arouteserver.readthedocs.io/en/latest/CONFIG.html#route-server-s-configuration) (`general.yml` file) or builds one on the basis of best practices and suggestions
 
@@ -95,7 +95,7 @@ Directories and paths used to install the role components. Default values are re
 * `arouteserver_bin`: `{{arouteserver_venv_dir}}/bin/arouteserver`.
 * `arouteserver_dir`: `~/arouteserver`.
 * `arouteserver_var`: `~/arouteserver_var`.
-* `bgpq3_dir`: `~/bgpq3`.
+* `bgpq4_dir`: `~/bgpq4`.
 
 ### Host variable names
 
