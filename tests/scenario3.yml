@@ -1,8 +1,9 @@
-- hosts: arouteserver_hosts
+- name: Apply arouteserver role
+  hosts: arouteserver_hosts
   connection: local
   vars:
     arouteserver_general_cfg_file: general.yml.j2.example
     arouteserver_clients_from_euroix_url: https://www.inex.ie/ixp/api/v4/member-export/ixf/0.6
     arouteserver_clients_from_euroix_ixp_id: 3
   roles:
-  - ansible-role-arouteserver
+    - ansible-role-arouteserver

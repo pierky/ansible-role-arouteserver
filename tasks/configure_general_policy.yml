@@ -2,35 +2,37 @@
 # input:
 # - rs_hostname: the hostname of the route server for which the general policy will be configured.
 
-- name: "remove {{ rs_hostname }}.general.yml.tmp"
-  file:
+- name: "Remove {{ rs_hostname }}.general.yml.tmp" # noqa: name[template]
+  ansible.builtin.file:
     path: "{{ arouteserver_var }}/{{ rs_hostname }}.general.yml.tmp"
     state: absent
-  changed_when: False
+  changed_when: false
 
 # Option 1: use the suggested configuration ('arouteserver configure') when arouteserver_general_cfg_file is not set.
-- name: "run 'arouteserver configure' to create {{ rs_hostname }}.general.yml.tmp"
-  command: >
+- name: "Run 'arouteserver configure' to create {{ rs_hostname }}.general.yml.tmp" # noqa: name[template]
+  ansible.builtin.command: >
     {{ arouteserver_bin }} configure --output {{ arouteserver_var }}/{{ rs_hostname }}.general.yml.tmp
     --preset-answer
     daemon={{ hostvars[rs_hostname][arouteserver_varname_daemon] }}
     version={{ hostvars[rs_hostname][arouteserver_varname_daemon_version] }}
     asn={{ hostvars[rs_hostname][arouteserver_varname_rs_asn] }}
     router_id={{ hostvars[rs_hostname][arouteserver_varname_router_id] }}
-    black_list={{ hostvars[rs_hostname][arouteserver_varname_local_networks]|join(',') }}
+    black_list={{ hostvars[rs_hostname][arouteserver_varname_local_networks] | join(',') }}
   when: arouteserver_general_cfg_file is not defined or not arouteserver_general_cfg_file
-  changed_when: False
+  changed_when: false
 
 # Option 2: use local general.yml file when arouteserver_general_cfg_file is set.
-- name: "use local {{ arouteserver_general_cfg_file }} to create {{ rs_hostname }}.general.yml.tmp"
-  template:
+- name: "Use local {{ arouteserver_general_cfg_file }} to create {{ rs_hostname }}.general.yml.tmp" # noqa: name[template]
+  ansible.builtin.template:
     src: "{{ arouteserver_general_cfg_file }}"
     dest: "{{ arouteserver_var }}/{{ rs_hostname }}.general.yml.tmp"
+    mode: ug=rw,o=r
   when: arouteserver_general_cfg_file is defined and arouteserver_general_cfg_file
-  changed_when: False
+  changed_when: false
 
-- name: "update {{ rs_hostname }}.general.yml from {{ rs_hostname }}.general.yml.tmp"
-  copy:
+- name: "Update {{ rs_hostname }}.general.yml from {{ rs_hostname }}.general.yml.tmp" # noqa: name[template]
+  ansible.builtin.copy:
     src: "{{ arouteserver_var }}/{{ rs_hostname }}.general.yml.tmp"
-    remote_src: True
+    remote_src: true
     dest: "{{ arouteserver_dir }}/{{ rs_hostname }}.general.yml"
+    mode: ug=rw,o=r

@@ -1,34 +1,34 @@
 ---
-- name: "install ARouteServer dependencies"
-  become: True
-  package:
+- name: "Install ARouteServer dependencies"
+  become: true
+  ansible.builtin.package:
     name: "{{ item }}"
     state: present
   with_items:
-  - "{% if ansible_distribution == 'CentOS' %}python-devel{% else %}{% if ansible_python_version is version('3.0', '>=') %}python3-dev{% else %}python-dev{% endif %}{% endif %}"
-  - "{% if ansible_distribution == 'CentOS' %}python-pip{% else %}{% if ansible_python_version is version('3.0', '>=') %}python3-pip{% else %}python-pip{% endif %}{% endif %}"
-  - "{% if ansible_distribution == 'CentOS' %}python-virtualenv{% else %}{% if ansible_python_version is version('3.0', '>=') %}python3-virtualenv{% else %}python-virutalenv{% endif %}{% endif %}"
-  - gcc
+    - "{% if ansible_distribution == 'centos' %}python-devel{% else %}{% if ansible_python_version is version('3.0', '>=') %}python3-dev{% else %}python-dev{% endif %}{% endif %}" # noqa: yaml[line-length]
+    - "{% if ansible_distribution == 'centos' %}python-pip{% else %}{% if ansible_python_version is version('3.0', '>=') %}python3-pip{% else %}python-pip{% endif %}{% endif %}" # noqa: yaml[line-length]
+    - "{% if ansible_distribution == 'centos' %}python-virtualenv{% else %}{% if ansible_python_version is version('3.0', '>=') %}python3-virtualenv{% else %}python-virutalenv{% endif %}{% endif %}" # noqa: yaml[line-length]
+    - gcc
 
-- name: "upgrade pip and setuptools"
-  pip:
+- name: "Upgrade pip and setuptools"
+  ansible.builtin.pip:
     virtualenv: "{{ arouteserver_venv_dir }}"
     name:
-    - pip
-    - setuptools
+      - pip
+      - setuptools
     extra_args: "--upgrade"
   tags:
-  - upgrade
+    - upgrade
 
-- name: "is this an upgrade request ('upgrade' tag)?"
-  command: "true"
+- name: "Is this an upgrade request ('upgrade' tag)?"
+  ansible.builtin.command: "true"
   register: arouterserver_upgrade_not_present
-  changed_when: False
+  changed_when: false
 
 # Option 1: install from PyPI repository when arouteserver_local_package_file is not set.
 # sets: arouteserver_pypi_install
-- name: "install PyPI package via pip"
-  pip:
+- name: "Install PyPI package via pip"
+  ansible.builtin.pip:
     virtualenv: "{{ arouteserver_venv_dir }}"
     name: arouteserver
     extra_args: "{% if arouterserver_upgrade_not_present is not defined %}--upgrade{% endif %}"
@@ -40,20 +40,22 @@
     )
   when: arouteserver_local_package_file is undefined or not arouteserver_local_package_file
   tags:
-  - upgrade
+    - upgrade
 
 # Option 2: install from local file when arouteserver_local_package_file is set.
 # sets: arouteserver_local_package
-- name: "copy ARouteServer local package to host"
-  copy:
+- name: "Copy ARouteServer local package to host"
+  ansible.builtin.copy:
     src: "{{ arouteserver_local_package_file }}"
     dest: "{{ arouteserver_var }}/arouteserver.tar.gz"
+    mode: ug=rw,o=r
   when: arouteserver_local_package_file is defined and arouteserver_local_package_file
   register: arouteserver_local_package
   tags:
-  - upgrade
-- name: "install local package via pip"
-  pip:
+    - upgrade
+
+- name: "Install local package via pip"
+  ansible.builtin.pip:
     virtualenv: "{{ arouteserver_venv_dir }}"
     name: "{{ arouteserver_var }}/arouteserver.tar.gz"
     extra_args: "{% if arouterserver_upgrade_not_present is not defined %}--upgrade{% endif %}"
@@ -63,36 +65,39 @@
     "Successfully installed arouteserver" in arouteserver_local_install.stdout
   when: arouteserver_local_package_file is defined and arouteserver_local_package_file and arouteserver_local_package.changed
   tags:
-  - upgrade
+    - upgrade
 
-- name: "arouteserver directory exists?"
-  stat:
+- name: "Does the arouteserver directory exist?"
+  ansible.builtin.stat:
     path: "{{ arouteserver_dir }}"
   register: arouteserver_dir_exists
   tags:
-  - upgrade
+    - upgrade
 
-- name: "run 'arouteserver setup'"
-  command: "{{ arouteserver_bin }} setup --dest-dir {{ arouteserver_dir }}"
+- name: "Run 'arouteserver setup'"
+  ansible.builtin.command: "{{ arouteserver_bin }} setup --dest-dir {{ arouteserver_dir }}"
   register: arouteserver_setup
-  when: arouteserver_dir_exists.stat.exists == False
+  when: not arouteserver_dir_exists.stat.exists
   tags:
-  - upgrade
+    - upgrade
+  changed_when: true
 
-- name: "copy any local custom file to {{ arouteserver_dir }}"
-  template:
+- name: "Copy any local custom file to {{ arouteserver_dir }}"
+  ansible.builtin.template:
     src: "{{ item }}"
     dest: "{{ arouteserver_dir }}/"
+    mode: ug=rw,o=r
   with_fileglob:
-  - ../templates/config/*
+    - ../templates/config/*
   register: custom_files
 
-- name: "run 'arouteserver setup-templates'"
-  command: "{{ arouteserver_bin }} setup-templates"
+- name: "Run 'arouteserver setup-templates'"
+  ansible.builtin.command: "{{ arouteserver_bin }} setup-templates"
   when: arouteserver_pypi_install.changed or
         arouteserver_local_install.changed
   notify:
-  - "arouteserver: reconfigure general policies"
-  - "arouteserver: rebuild rs config files"
+    - "arouteserver: reconfigure general policies"
+    - "arouteserver: rebuild rs config files"
   tags:
-  - upgrade
+    - upgrade
+  changed_when: true
