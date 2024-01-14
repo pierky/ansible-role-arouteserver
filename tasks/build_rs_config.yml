@@ -32,6 +32,16 @@
     loop_var: command_opts
   changed_when: False
 
+- name: "Rebuild HTML summary file for {{ rs_hostname }}"
+  ansible.builtin.command: >
+    {{ arouteserver_bin }}
+    html
+    --clients {{ arouteserver_dir }}/clients.yml
+    --general {{ arouteserver_dir }}/{{ rs_hostname }}.general.yml
+    --output {{ arouteserver_var }}/{{ rs_hostname }}.d/{{ rs_hostname }}.summary.html
+  when: hostvars[rs_hostname]['arouteserver_generate_html']
+  changed_when: true
+
 - name: "list files in {{ rs_hostname }}.d/"
   find:
     paths: "{{ arouteserver_var }}/{{ rs_hostname }}.d/"
