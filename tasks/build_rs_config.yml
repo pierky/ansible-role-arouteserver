@@ -21,13 +21,17 @@
     --target-version {{ hostvars[rs_hostname][arouteserver_varname_daemon_version] }}
     --clients {{ arouteserver_dir }}/clients.yml
     --general {{ arouteserver_dir }}/{{ rs_hostname }}.general.yml
-    --output {{ arouteserver_var }}/{{ rs_hostname }}.d/{{ rs_hostname }}-{{ command_opts.daemon }}{{ command_opts.tag }}.cfg
+    --output {{ arouteserver_var }}/{{ rs_hostname }}.d/{{ rs_hostname }}-{{ command_opts.daemon }}{{ command_opts.output_tag }}.cfg
     {{ command_opts.args }}
-  when: command_opts.daemon == hostvars[rs_hostname][arouteserver_varname_daemon]
+  when: |
+    (command_opts.daemon == hostvars[rs_hostname][arouteserver_varname_daemon]) and
+    (hostvars[rs_hostname][arouteserver_varname_daemon_version] is ansible.builtin.version(command_opts.daemon_version_min, '>=')) and
+    (hostvars[rs_hostname][arouteserver_varname_daemon_version] is ansible.builtin.version(command_opts.daemon_version_max, '<='))
   with_items:
-  - { daemon: "bird", tag: "4", args: "--ip-ver 4" }
-  - { daemon: "bird", tag: "6", args: "--ip-ver 6" }
-  - { daemon: "openbgpd", tag: "",  args: "--ignore-issues path_hiding" }
+  - { daemon: "bird", daemon_version_min: "0", daemon_version_max: "1.6.8", output_tag: "4", args: "--ip-ver 4" }
+  - { daemon: "bird", daemon_version_min: "0", daemon_version_max: "1.6.8", output_tag: "6", args: "--ip-ver 6" }
+  - { daemon: "bird", daemon_version_min: "2.0", daemon_version_max: "2.999", output_tag: "", args: "" }
+  - { daemon: "openbgpd", daemon_version_min: "0", daemon_version_max: "999", output_tag: "", args: "--ignore-issues path_hiding" }
   loop_control:
     loop_var: command_opts
   changed_when: False
