@@ -1,4 +1,5 @@
-- hosts: arouteserver_hosts
+- name: Apply arouteserver role
+  hosts: arouteserver_hosts
   connection: local
   vars:
     arouteserver_general_cfg_file: general.yml.j2.example
@@ -9,4 +10,4 @@
     # by the script which run the tests.
     arouteserver_clients_cfg_file: /root/tmp/clients.yml
   roles:
-  - ansible-role-arouteserver
+    - ansible-role-arouteserver

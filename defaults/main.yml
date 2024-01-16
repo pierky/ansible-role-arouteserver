@@ -1,23 +1,23 @@
 ---
-#arouteserver_local_package_file:
+# arouteserver_local_package_file:
 
-#arouteserver_general_cfg_file:
+# arouteserver_general_cfg_file:
 
-#arouteserver_clients_cfg_file:
+# arouteserver_clients_cfg_file:
 
-#arouteserver_clients_from_euroix_file:
-#arouteserver_clients_from_euroix_url:
-#arouteserver_clients_from_euroix_ixp_id:
-#arouteserver_clients_from_euroix_extra_args
+# arouteserver_clients_from_euroix_file:
+# arouteserver_clients_from_euroix_url:
+# arouteserver_clients_from_euroix_ixp_id:
+# arouteserver_clients_from_euroix_extra_args
 
-#arouteserver_notify_on_rs_change:
+# arouteserver_notify_on_rs_change:
 
 arouteserver_venv_dir: "{{ lookup('env', 'HOME') }}/.virtualenvs/arouteserver"
 arouteserver_bin: "{{ arouteserver_venv_dir }}/bin/arouteserver"
 arouteserver_dir: "{{ lookup('env', 'HOME') }}/arouteserver"
 arouteserver_templates_dir: "{{ arouteserver_dir }}/templates"
 arouteserver_var: "{{ lookup('env', 'HOME') }}/arouteserver_var"
-bgpq4_dir: "{{ lookup('env', 'HOME') }}/bgpq4"
+bgpq4_dir: "{{ lookup('env', 'HOME') }}/bgpq4" # noqa: var-naming[no-role-prefix]
 
 arouteserver_varname_rs_asn: "rs_asn"
 arouteserver_varname_daemon: "daemon"
@@ -27,3 +27,5 @@ arouteserver_varname_local_networks: "local_networks"
 
 arouteserver_irr_as_set_generate: false
 arouteserver_irr_as_set_template: plain_rpsl.j2
+
+arouteserver_generate_html: false

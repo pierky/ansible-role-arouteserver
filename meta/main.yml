@@ -3,28 +3,28 @@ galaxy_info:
   description: An Ansible role for installing ARouteServer.
   license: GPLv3
 
-  min_ansible_version: 2.4
+  min_ansible_version: "2.4"
 
   platforms:
-  - name: Debian
-    versions:
-    - jessie
-    - stretch
-  - name: Ubuntu
-    versions:
-    - trusty
-    - xenial
-  - name: EL
-    versions:
-    - 7
+    - name: Debian
+      versions:
+        - jessie
+        - stretch
+    - name: Ubuntu
+      versions:
+        - trusty
+        - xenial
+    - name: EL
+      versions:
+        - "7"
 
   galaxy_tags:
-  - routeserver
-  - route-server
-  - IXP
-  - InternetExchange
-  - BIRD
-  - OpenBGPD
-  - BGP
+    - routeserver
+    - routeserver
+    - ixp
+    - internetexchange
+    - bird
+    - openbgpd
+    - bgp
 
 dependencies: []
