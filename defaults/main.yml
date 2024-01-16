@@ -23,3 +23,5 @@ arouteserver_varname_daemon: "daemon"
 arouteserver_varname_daemon_version: "daemon_version"
 arouteserver_varname_router_id: "router_id"
 arouteserver_varname_local_networks: "local_networks"
+
+arouteserver_generate_html: false
