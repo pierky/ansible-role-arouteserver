@@ -1,49 +1,50 @@
 ---
-- name: "install tools to build bgpq4"
-  become: True
-  package:
+- name: "Install tools to build bgpq4"
+  become: true
+  ansible.builtin.package:
     name: "{{ item }}"
     state: present
   with_items:
-  - git
-  - gcc
-  - automake
-  - autoconf
-  - libtool
-  - make
+    - git
+    - gcc
+    - automake
+    - autoconf
+    - libtool
+    - make
 
-- name: "bgpq4: clone git repository"
-  git:
+- name: "Install bgpq4: clone git repository"
+  ansible.builtin.git: # noqa: latest[git]
     repo: https://github.com/bgp/bgpq4.git
     dest: "{{ bgpq4_dir }}"
   register: bgpq4_git_clone
 
-- name: "bgpq4: bootstrap"
-  command: ./bootstrap
+- name: "Install bgpq4: bootstrap"
+  ansible.builtin.command: ./bootstrap
   args:
     chdir: "{{ bgpq4_dir }}"
-  when: bgpq4_git_clone.changed
-  changed_when: False
+  when: bgpq4_git_clone.changed # noqa: no-handler
+  changed_when: false
 
-- name: "bgpq4: configure"
-  command: ./configure
+- name: "Install bgpq4: configure"
+  ansible.builtin.command: ./configure
   args:
     chdir: "{{ bgpq4_dir }}"
-  when: bgpq4_git_clone.changed
-  changed_when: False
+  when: bgpq4_git_clone.changed # noqa: no-handler
+  changed_when: false
 
-- name: "bgpq4: make"
-  command: make
+- name: "Install bgpq4: make"
+  ansible.builtin.command: make
   args:
     chdir: "{{ bgpq4_dir }}"
-  when: bgpq4_git_clone.changed
+  when: bgpq4_git_clone.changed # noqa: no-handler
   register: bgpq4_make
   changed_when: >
     "Nothing to be done for 'all-am'" not in bgpq4_make.stdout
 
-- name: "bgpq4: install if compile changed"
-  become: True
-  command: make install
+- name: "Install bgpq4: install if compile changed"
+  become: true
+  ansible.builtin.command: make install
   args:
     chdir: "{{ bgpq4_dir }}"
-  when: bgpq4_make.changed
+  when: bgpq4_make.changed # noqa: no-handler
+  changed_when: true

@@ -1,42 +1,45 @@
 ---
-- name: "remove clients.yml.tmp"
-  file:
+- name: "Remove clients.yml.tmp"
+  ansible.builtin.file:
     path: "{{ arouteserver_var }}/clients.yml.tmp"
     state: absent
-  changed_when: False
+  changed_when: false
 
 # Option 1: use local clients.yml file when arouteserver_clients_cfg_file is set.
-- name: "use local {{ arouteserver_clients_cfg_file }} file to create clients.yml.tmp"
-  template:
+- name: "Use local {{ arouteserver_clients_cfg_file }} file to create clients.yml.tmp" # noqa: name[template]
+  ansible.builtin.template:
     src: "{{ arouteserver_clients_cfg_file }}"
     dest: "{{ arouteserver_var }}/clients.yml.tmp"
+    mode: ug=rw,o=r
   when: >
     arouteserver_clients_cfg_file is defined
-  changed_when: False
+  changed_when: false
 
 # Option 2: import clients from local IX-F Member Export JSON file when arouteserver_clients_from_euroix_file is set.
-- name: "import clients from local {{ arouteserver_clients_cfg_file }} IX-F Member Export JSON file to create clients.yml.tmp"
+- name: "Import clients from local {{ arouteserver_clients_cfg_file }} IX-F Member Export JSON file to create clients.yml.tmp" # noqa: name[template]
+  when: >
+    arouteserver_clients_from_euroix_file is defined and
+    arouteserver_clients_from_euroix_ixp_id is defined
   block:
-    - name: "copy local file to ARouteServer host"
-      copy:
+    - name: "Copy local file to ARouteServer host"
+      ansible.builtin.copy:
         src: "{{ arouteserver_clients_cfg_file }}"
-        dst: "{{ arouteserver_var }}/clients-from-euroix.yml.tmp"
+        dest: "{{ arouteserver_var }}/clients-from-euroix.yml.tmp"
+        mode: ug=rw,o=r
       register: local_clients_file
-    - name: "run 'arouteserver clients-from-euroix' to process the IX-F Member Export JSON file"
-      command: >
+    - name: "Run 'arouteserver clients-from-euroix' to process the IX-F Member Export JSON file"
+      ansible.builtin.command: >
         {{ arouteserver_bin }} clients-from-euroix
         -i {{ arouteserver_var }}/clients-from-euroix.yml.tmp
         -o {{ arouteserver_var }}/clients.yml.tmp
         {{ arouteserver_clients_from_euroix_ixp_id }}
         {% if arouteserver_clients_from_euroix_extra_args is defined %}{{ arouteserver_clients_from_euroix_extra_args }}{% endif %}
-      when: local_clients_file.changed
-  when: >
-    arouteserver_clients_from_euroix_file is defined and
-    arouteserver_clients_from_euroix_ixp_id is defined
+      when: local_clients_file.changed # noqa: no-handler
+      changed_when: true
 
 # Option 3: fetch clients from IX-F Member Export JSON URL when arouteserver_clients_from_euroix_url is set.
-- name: "fetch clients from IX-F Member Export JSON file at {{ arouteserver_clients_from_euroix_url }} to create clients.yml.tmp"
-  command: >
+- name: "Fetch clients from IX-F Member Export JSON file at {{ arouteserver_clients_from_euroix_url }} to create clients.yml.tmp" # noqa: name[template]
+  ansible.builtin.command: >
     {{ arouteserver_bin }} clients-from-euroix
     --url {{ arouteserver_clients_from_euroix_url }}
     -o {{ arouteserver_var }}/clients.yml.tmp
@@ -45,39 +48,40 @@
   when: >
     arouteserver_clients_from_euroix_url is defined and
     arouteserver_clients_from_euroix_ixp_id is defined
-  changed_when: False
+  changed_when: false
 
-- name: "verify that client list has been updated"
+- name: "Verify that client list has been updated"
   block:
-  - name: "is clients.yml.tmp present?"
-    stat:
-      path: "{{ arouteserver_var }}/clients.yml.tmp"
-    register: clients_yml_tmp_exists
-    changed_when: False
-  - name: "fail if clients.yml.tmp is not present"
-    fail:
-      msg: >
-        Client list not updated.
-        Please check that at least one variable among arouteserver_clients_cfg_file,
-        arouteserver_clients_from_euroix_file and arouteserver_clients_from_euroix_url
-        is set, and that arouteserver_clients_from_euroix_ixp_id is also set when
-        arouteserver_clients_from_euroix_* is used.
-    when: not clients_yml_tmp_exists.stat.exists
+    - name: "Is clients.yml.tmp present?"
+      ansible.builtin.stat:
+        path: "{{ arouteserver_var }}/clients.yml.tmp"
+      register: clients_yml_tmp_exists
+      changed_when: false
+    - name: "Fail if clients.yml.tmp is not present"
+      ansible.builtin.fail:
+        msg: >
+          Client list not updated.
+          Please check that at least one variable among arouteserver_clients_cfg_file,
+          arouteserver_clients_from_euroix_file and arouteserver_clients_from_euroix_url
+          is set, and that arouteserver_clients_from_euroix_ixp_id is also set when
+          arouteserver_clients_from_euroix_* is used.
+      when: not clients_yml_tmp_exists.stat.exists
 
 # When the clients.yml file is built using the --url argument, the comments
 # within the file contain the timestamp of the retrieval time. This implies
 # that the file always looks different from the previous one, even if the
 # content is the same.
-- name: "remove comments from clients.yml.tmp"
-  replace:
+- name: "Remove comments from clients.yml.tmp"
+  ansible.builtin.replace:
     path: "{{ arouteserver_var }}/clients.yml.tmp"
     regexp: '^#.*\s'
-  changed_when: False
+  changed_when: false
 
-- name: "update clients.yml from clients.yml.tmp"
-  copy:
+- name: "Update clients.yml from clients.yml.tmp"
+  ansible.builtin.copy:
     src: "{{ arouteserver_var }}/clients.yml.tmp"
-    remote_src: True
+    remote_src: true
     dest: "{{ arouteserver_dir }}/clients.yml"
+    mode: ug=rw,o=r
   notify:
-  - "arouteserver: rebuild rs config files"
+    - "arouteserver: rebuild rs config files"
