@@ -34,6 +34,18 @@
     loop_var: command_opts
   changed_when: false
 
+- name: "Generate IRR AS-Set object for {{ rs_hostname }}"
+  ansible.builtin.command: >
+    {{ arouteserver_bin }}
+    irr-as-set
+    --clients {{ arouteserver_dir }}/clients.yml
+    --general {{ arouteserver_dir }}/{{ rs_hostname }}.general.yml
+    --output {{ arouteserver_var }}/{{ rs_hostname }}.d/{{ rs_hostname }}-irr-as-set.rpsl.txt
+    --templates-dir {{ arouteserver_templates_dir }}
+    --template-file-name {{ hostvars[rs_hostname]['arouteserver_irr_as_set_template'] }}
+  when: hostvars[rs_hostname]['arouteserver_irr_as_set_generate']
+  changed_when: true
+
 - name: "Rebuild HTML summary file for {{ rs_hostname }}"
   ansible.builtin.command: >
     {{ arouteserver_bin }}
