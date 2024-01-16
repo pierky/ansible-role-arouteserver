@@ -2,22 +2,24 @@
 # input:
 # - rs_hostname: the hostname of the route server for which the configuration file will be built.
 
-- name: "remove {{ rs_hostname }}.d"
-  file:
+- name: "Remove {{ rs_hostname }}.d" # noqa: name[template]
+  ansible.builtin.file:
     path: "{{ arouteserver_var }}/{{ rs_hostname }}.d"
     state: absent
-  changed_when: False
+  changed_when: false
 
-- name: "create {{ rs_hostname }}.d"
-  file:
+- name: "Create {{ rs_hostname }}.d" # noqa: name[template]
+  ansible.builtin.file:
     path: "{{ arouteserver_var }}/{{ rs_hostname }}.d"
     state: directory
-  changed_when: False
+    mode: ug=rwx,o=rx
+  changed_when: false
 
-- name: "rebuild config files for {{ rs_hostname }}"
-  command: >
+- name: "Rebuild config files for {{ rs_hostname }}" # noqa: name[template]
+  ansible.builtin.command: >
     {{ arouteserver_bin }}
     {{ command_opts.daemon }}
+    --templates-dir {{ arouteserver_templates_dir }}
     --target-version {{ hostvars[rs_hostname][arouteserver_varname_daemon_version] }}
     --clients {{ arouteserver_dir }}/clients.yml
     --general {{ arouteserver_dir }}/{{ rs_hostname }}.general.yml
@@ -28,30 +30,53 @@
     (hostvars[rs_hostname][arouteserver_varname_daemon_version] is ansible.builtin.version(command_opts.daemon_version_min, '>=')) and
     (hostvars[rs_hostname][arouteserver_varname_daemon_version] is ansible.builtin.version(command_opts.daemon_version_max, '<='))
   with_items:
-  - { daemon: "bird", daemon_version_min: "0", daemon_version_max: "1.6.8", output_tag: "4", args: "--ip-ver 4" }
-  - { daemon: "bird", daemon_version_min: "0", daemon_version_max: "1.6.8", output_tag: "6", args: "--ip-ver 6" }
-  - { daemon: "bird", daemon_version_min: "2.0", daemon_version_max: "2.999", output_tag: "", args: "" }
-  - { daemon: "openbgpd", daemon_version_min: "0", daemon_version_max: "999", output_tag: "", args: "--ignore-issues path_hiding" }
+    - { daemon: "bird", daemon_version_min: "0", daemon_version_max: "1.6.8", output_tag: "4", args: "--ip-ver 4" }
+    - { daemon: "bird", daemon_version_min: "0", daemon_version_max: "1.6.8", output_tag: "6", args: "--ip-ver 6" }
+    - { daemon: "bird", daemon_version_min: "2.0", daemon_version_max: "2.999", output_tag: "", args: "" }
+    - { daemon: "openbgpd", daemon_version_min: "0", daemon_version_max: "999", output_tag: "", args: "--ignore-issues path_hiding" }
   loop_control:
     loop_var: command_opts
-  changed_when: False
+  changed_when: false
 
-- name: "list files in {{ rs_hostname }}.d/"
-  find:
+- name: "Generate IRR AS-Set object for {{ rs_hostname }}"
+  ansible.builtin.command: >
+    {{ arouteserver_bin }}
+    irr-as-set
+    --clients {{ arouteserver_dir }}/clients.yml
+    --general {{ arouteserver_dir }}/{{ rs_hostname }}.general.yml
+    --output {{ arouteserver_var }}/{{ rs_hostname }}.d/{{ rs_hostname }}-irr-as-set.rpsl.txt
+    --templates-dir {{ arouteserver_templates_dir }}
+    --template-file-name {{ hostvars[rs_hostname]['arouteserver_irr_as_set_template'] }}
+  when: hostvars[rs_hostname]['arouteserver_irr_as_set_generate']
+  changed_when: true
+
+- name: "Rebuild HTML summary file for {{ rs_hostname }}"
+  ansible.builtin.command: >
+    {{ arouteserver_bin }}
+    html
+    --clients {{ arouteserver_dir }}/clients.yml
+    --general {{ arouteserver_dir }}/{{ rs_hostname }}.general.yml
+    --output {{ arouteserver_var }}/{{ rs_hostname }}.d/{{ rs_hostname }}.summary.html
+  when: hostvars[rs_hostname]['arouteserver_generate_html']
+  changed_when: true
+
+- name: "List files in {{ rs_hostname }}.d/" # noqa: name[template]
+  ansible.builtin.find:
     paths: "{{ arouteserver_var }}/{{ rs_hostname }}.d/"
   register: rs_d_content
 
-- name: "copy {{ rs_hostname }} config files to {{ arouteserver_dir }}"
-  copy:
+- name: "Copy {{ rs_hostname }} config files to {{ arouteserver_dir }}" # noqa: name[template]
+  ansible.builtin.copy:
     src: "{{ item.path }}"
     dest: "{{ arouteserver_dir }}/"
-    remote_src: True
+    remote_src: true
+    mode: ug=rw,o=r
   with_items:
-  - "{{ rs_d_content.files }}"
+    - "{{ rs_d_content.files }}"
   register: rs_config_file
 
-- name: "notify on rs config change"
-  command: "true"
+- name: "Notify on rs config change"
+  ansible.builtin.command: "true"
   notify: "{{ arouteserver_notify_on_rs_change }}"
   when: arouteserver_notify_on_rs_change is defined and arouteserver_notify_on_rs_change and rs_config_file.changed
-  changed_when: False
+  changed_when: false
