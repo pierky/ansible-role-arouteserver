@@ -19,6 +19,7 @@
   ansible.builtin.command: >
     {{ arouteserver_bin }}
     {{ command_opts.daemon }}
+    --templates-dir {{ arouteserver_templates_dir }}
     --target-version {{ hostvars[rs_hostname][arouteserver_varname_daemon_version] }}
     --clients {{ arouteserver_dir }}/clients.yml
     --general {{ arouteserver_dir }}/{{ rs_hostname }}.general.yml

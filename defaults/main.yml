@@ -15,6 +15,7 @@
 arouteserver_venv_dir: "{{ lookup('env', 'HOME') }}/.virtualenvs/arouteserver"
 arouteserver_bin: "{{ arouteserver_venv_dir }}/bin/arouteserver"
 arouteserver_dir: "{{ lookup('env', 'HOME') }}/arouteserver"
+arouteserver_templates_dir: "{{ arouteserver_dir }}/templates"
 arouteserver_var: "{{ lookup('env', 'HOME') }}/arouteserver_var"
 bgpq4_dir: "{{ lookup('env', 'HOME') }}/bgpq4" # noqa: var-naming[no-role-prefix]
 
