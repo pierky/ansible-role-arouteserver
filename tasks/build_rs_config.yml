@@ -51,6 +51,7 @@
     --use-local-files {{ hostvars[rs_hostname]['arouteserver_use_local_files'] | default(arouteserver_use_local_files) | join(' ') }}
     {% endif %}
     {{ command_opts.args }}
+    {% if arouteserver_perform_graceful_shutdown %}--perform-graceful-shutdown{% endif %}
   when: |
     (command_opts.daemon == hostvars[rs_hostname][arouteserver_varname_daemon]) and
     (hostvars[rs_hostname][arouteserver_varname_daemon_version] is ansible.builtin.version(command_opts.daemon_version_min, '>=')) and

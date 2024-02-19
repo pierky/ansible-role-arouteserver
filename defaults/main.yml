@@ -54,3 +54,7 @@ arouteserver_valid_local_files_bird:
   - client
   - client4
   - client6
+
+# Sets --perform-graceful-shutdown, which can be used temporarily to drain
+# traffic for maintenance
+arouteserver_perform_graceful_shutdown: false
