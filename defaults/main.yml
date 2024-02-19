@@ -29,3 +29,6 @@ arouteserver_irr_as_set_generate: false
 arouteserver_irr_as_set_template: plain_rpsl.j2
 
 arouteserver_generate_html: false
+# Sets --perform-graceful-shutdown, which can be used temporarily to drain
+#   traffic for maintenance
+arouteserver_perform_graceful_shutdown: false
