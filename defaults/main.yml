@@ -29,6 +29,32 @@ arouteserver_irr_as_set_generate: false
 arouteserver_irr_as_set_template: plain_rpsl.j2
 
 arouteserver_generate_html: false
+
+arouteserver_local_files_dir: "/opt/arouteserver/local_files"
+arouteserver_use_local_files: []
+arouteserver_valid_local_files_openbgpd:
+  - client
+  - footer
+  - header
+  - logging
+  - pre-clients
+  - post-clients
+  - pre-filters
+  - post-filters
+  - pre-irrdb
+  - post-irrdb
+arouteserver_valid_local_files_bird:
+  - logging
+  - header
+  - header4
+  - header6
+  - footer
+  - footer4
+  - footer6
+  - client
+  - client4
+  - client6
+
 # Sets --perform-graceful-shutdown, which can be used temporarily to drain
-#   traffic for maintenance
+# traffic for maintenance
 arouteserver_perform_graceful_shutdown: false

@@ -15,6 +15,28 @@
     mode: ug=rwx,o=rx
   changed_when: false
 
+- name: "Validate values of variable arouteserver_use_local_files (OpenBGPD)"
+  when: >
+    (hostvars[rs_hostname]['arouteserver_use_local_files'] | default(arouteserver_use_local_files))
+    and
+    (hostvars[rs_hostname][arouteserver_varname_daemon] == 'openbgpd')
+  ansible.builtin.assert:
+    that: "item in arouteserver_valid_local_files_openbgpd"
+    fail_msg: "{{ item }} is not an arouteserver local file for OpenBGPD"
+    success_msg: "{{ item }} is an acceptable arouteserver local file for OpenBGPD"
+  loop: "{{ hostvars[rs_hostname]['arouteserver_use_local_files'] | default(arouteserver_use_local_files) }}"
+
+- name: "Validate values of variable arouteserver_use_local_files (BIRD)"
+  when: >
+    (hostvars[rs_hostname]['arouteserver_use_local_files'] | default(arouteserver_use_local_files))
+    and
+    (hostvars[rs_hostname][arouteserver_varname_daemon] == 'bird')
+  ansible.builtin.assert:
+    that: "item in arouteserver_valid_local_files_bird"
+    fail_msg: "{{ item }} is not an arouteserver local file for BIRD"
+    success_msg: "{{ item }} is an acceptable arouteserver local file for BIRD"
+  loop: "{{ hostvars[rs_hostname]['arouteserver_use_local_files'] | default(arouteserver_use_local_files) }}"
+
 - name: "Rebuild config files for {{ rs_hostname }}" # noqa: name[template]
   ansible.builtin.command: >
     {{ arouteserver_bin }}
@@ -24,6 +46,10 @@
     --clients {{ arouteserver_dir }}/clients.yml
     --general {{ arouteserver_dir }}/{{ rs_hostname }}.general.yml
     --output {{ arouteserver_var }}/{{ rs_hostname }}.d/{{ rs_hostname }}-{{ command_opts.daemon }}{{ command_opts.output_tag }}.cfg
+    {% if hostvars[rs_hostname]['arouteserver_use_local_files'] | default(arouteserver_use_local_files) %}
+    --local-files-dir {{ arouteserver_local_files_dir }}
+    --use-local-files {{ hostvars[rs_hostname]['arouteserver_use_local_files'] | default(arouteserver_use_local_files) | join(' ') }}
+    {% endif %}
     {{ command_opts.args }}
     {% if arouteserver_perform_graceful_shutdown %}--perform-graceful-shutdown{% endif %}
   when: |
