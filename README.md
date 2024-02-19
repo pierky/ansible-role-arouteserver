@@ -83,6 +83,10 @@ Mandatory, one of the 3 following variables:
 
 * (optional) `arouteserver_clients_from_euroix_extra_args`: any extra arguments that should be used with the `clients-from-euroix` [command](https://arouteserver.readthedocs.io/en/latest/USAGE.html#create-clients-yml-file-from-euro-ix-member-list-json-file). Example: `--merge-from-peeringdb as-set max-prefix --vlan-id 123`.
 
+### Route server customization: site-specific custom configuration files
+
+The variables `arouteserver_local_files_dir` and `arouteserver_use_local_files` can be set to pass *pointers* to local custom files to ARouteServer via its [`--use-local-files` command line option](https://arouteserver.readthedocs.io/en/latest/CONFIG.html#site-specific-custom-configuration-files).
+
 ### Route server operations: [RFC8326](https://datatracker.ietf.org/doc/html/rfc8326) graceful shutdown
 
 The variable `arouteserver_perform_graceful_shutdown`, when set, instruct ARouteServer to build the following configuration with the [graceful shutdown](https://arouteserver.readthedocs.io/en/latest/USAGE.html#route-server-graceful-shutdown) option enabled, to temporarily drain traffic during a maintenance event.
