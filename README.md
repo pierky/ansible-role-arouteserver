@@ -83,6 +83,12 @@ Mandatory, one of the 3 following variables:
 
 * (optional) `arouteserver_clients_from_euroix_extra_args`: any extra arguments that should be used with the `clients-from-euroix` [command](https://arouteserver.readthedocs.io/en/latest/USAGE.html#create-clients-yml-file-from-euro-ix-member-list-json-file). Example: `--merge-from-peeringdb as-set max-prefix --vlan-id 123`.
 
+### Route server operations: [RFC8326](https://datatracker.ietf.org/doc/html/rfc8326) graceful shutdown
+
+The variable `arouteserver_perform_graceful_shutdown`, when set, instruct ARouteServer to build the following configuration with the [graceful shutdown](https://arouteserver.readthedocs.io/en/latest/USAGE.html#route-server-graceful-shutdown) option enabled, to temporarily drain traffic during a maintenance event.
+
+Given the nature of the graceful shutdown operation, it's suggested to not set this variable to `true` permanently, but rather [to pass it at runtime](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_variables.html#defining-variables-at-runtime) only before the maintenance is performed.
+
 ### Integration with other roles
 
 * (optional) `arouteserver_notify_on_rs_change`: when set, the role will notify this handler when route server configuration files are updated.
