@@ -17,13 +17,7 @@
       - pip
       - setuptools
     extra_args: "--upgrade"
-  tags:
-    - upgrade
-
-- name: "Is this an upgrade request ('upgrade' tag)?"
-  ansible.builtin.command: "true"
-  register: arouterserver_upgrade_not_present
-  changed_when: false
+  when: arouteserver_upgrade is defined and arouteserver_upgrade | bool
 
 # Option 1: install from PyPI repository when arouteserver_local_package_file is not set.
 # sets: arouteserver_pypi_install
@@ -31,7 +25,7 @@
   ansible.builtin.pip:
     virtualenv: "{{ arouteserver_venv_dir }}"
     name: arouteserver
-    extra_args: "{% if arouterserver_upgrade_not_present is not defined %}--upgrade{% endif %}"
+    extra_args: "{% if arouteserver_upgrade is defined and arouteserver_upgrade %}--upgrade{% endif %}"
   register: arouteserver_pypi_install
   changed_when: >
     arouteserver_pypi_install.stdout is defined and (
@@ -39,8 +33,6 @@
     "Successfully installed arouteserver" in arouteserver_pypi_install.stdout
     )
   when: arouteserver_local_package_file is undefined or not arouteserver_local_package_file
-  tags:
-    - upgrade
 
 # Option 2: install from local file when arouteserver_local_package_file is set.
 # sets: arouteserver_local_package
@@ -49,37 +41,37 @@
     src: "{{ arouteserver_local_package_file }}"
     dest: "{{ arouteserver_var }}/arouteserver.tar.gz"
     mode: ug=rw,o=r
-  when: arouteserver_local_package_file is defined and arouteserver_local_package_file
+  when: >
+    arouteserver_local_package_file is defined
+    and
+    arouteserver_local_package_file
+    and
+    arouteserver_upgrade
   register: arouteserver_local_package
-  tags:
-    - upgrade
 
 - name: "Install local package via pip"
   ansible.builtin.pip:
     virtualenv: "{{ arouteserver_venv_dir }}"
     name: "{{ arouteserver_var }}/arouteserver.tar.gz"
-    extra_args: "{% if arouterserver_upgrade_not_present is not defined %}--upgrade{% endif %}"
+    extra_args: "{% if arouteserver_upgrade is defined and arouteserver_upgrade %}--upgrade{% endif %}"
   register: arouteserver_local_install
   changed_when: >
     "for arouteserver: finished with status 'done'" in arouteserver_local_install.stdout or
     "Successfully installed arouteserver" in arouteserver_local_install.stdout
   when: arouteserver_local_package_file is defined and arouteserver_local_package_file and arouteserver_local_package.changed
-  tags:
-    - upgrade
 
 - name: "Does the arouteserver directory exist?"
   ansible.builtin.stat:
     path: "{{ arouteserver_dir }}"
   register: arouteserver_dir_exists
-  tags:
-    - upgrade
 
 - name: "Run 'arouteserver setup'"
   ansible.builtin.command: "{{ arouteserver_bin }} setup --dest-dir {{ arouteserver_dir }}"
   register: arouteserver_setup
-  when: not arouteserver_dir_exists.stat.exists
-  tags:
-    - upgrade
+  when: >
+    not arouteserver_dir_exists.stat.exists
+    and
+    arouteserver_upgrade
   changed_when: true
 
 - name: "Copy any local custom file to {{ arouteserver_dir }}"
@@ -93,11 +85,15 @@
 
 - name: "Run 'arouteserver setup-templates'"
   ansible.builtin.command: "{{ arouteserver_bin }} setup-templates"
-  when: arouteserver_pypi_install.changed or
-        arouteserver_local_install.changed
+  when: >
+    (
+      arouteserver_pypi_install.changed
+      or
+      arouteserver_local_install.changed
+    )
+    and
+    arouteserver_upgrade
   notify:
     - "arouteserver: reconfigure general policies"
     - "arouteserver: rebuild rs config files"
-  tags:
-    - upgrade
   changed_when: true

@@ -13,6 +13,8 @@
 # arouteserver_notify_on_rs_change:
 
 arouteserver_venv_dir: "{{ lookup('env', 'HOME') }}/.virtualenvs/arouteserver"
+# Don't upgrade the `arouteserver` python package on each run unless explicitly requested
+arouteserver_upgrade: false
 arouteserver_bin: "{{ arouteserver_venv_dir }}/bin/arouteserver"
 arouteserver_dir: "{{ lookup('env', 'HOME') }}/arouteserver"
 arouteserver_templates_dir: "{{ arouteserver_dir }}/templates"

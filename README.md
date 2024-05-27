@@ -22,7 +22,7 @@ Most of the behaviours of this role can be set using some variables that are doc
 
 ### Installation
 
-ARouteServer is installed using `pip` via PyPI or from a local package on the control machine. When the `upgrade` tag is used, the `--upgrade` argument is passed to `pip` to allow an upgrade of the installation.
+ARouteServer is installed using `pip` via PyPI or from a local package on the control machine. When the ansible variable `arouteserver_upgrade` is set to `true` (defaults to `false`), the `--upgrade` argument is passed to `pip` to allow an upgrade of the installation.
 
 Any local file within the role's `templates/config` directory is copied into the ARouteServer's directory (Jinja2 templates are supported).
 
@@ -52,8 +52,6 @@ If set, an external handler is notified when the configuration files change.
 
 * `build_rs_config`: when set, only the route server configuration files are built.
 
-* `upgrade`: when set, an upgrade of the ARouteServer's package is attempted.
-
 ## Requirements
 
 No requirements.
@@ -65,6 +63,7 @@ Variables used by this role are listed below, grouped by topic.
 ### Package installation
 
 * (optional) `arouteserver_local_package_file`: when set, the role installs ARouteServer using the package at this local path, otherwise the last version from PyPI is fetched and installed (default).
+* (optional) `arouteserver_upgrade`; when set to `true` passes `--upgrade` to PIP to enable selective upgrades of the upstream `arouteserver` python package.
 
 ### Route server configuration: general policy (`general.yml`)
 
